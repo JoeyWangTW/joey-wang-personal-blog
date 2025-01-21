@@ -7,6 +7,12 @@ interface Project {
 
 const projectsData: Project[] = [
   {
+    title: 'YouTube Addiction Rehab',
+    description: `A chrome extension using LLM to help user moderate content and recover from YouTube addiction. `,
+    imgSrc: '/static/images/yt_addiction.jpg',
+    href: 'https://youtubeaddiction.rehab',
+  },
+  {
     title: 'AI Knoledge Map',
     description: `Automatic Reasearch, brainstorming tool powered by AI. Generate nested knowledge map providing only the topic keyword.`,
     imgSrc: '/static/images/akm.png',
