@@ -41,7 +41,7 @@ const projectsData: Project[] = [
     title: 'Youtube Channel',
     description: `A place where I share my life, career and tech`,
     imgSrc: '/static/images/youtube.png',
-    href: 'https://www.youtube.com/user/TheJoeywang123',
+    href: 'https://www.youtube.com/@joeysywang',
   },
   {
     title: 'Memory Lane',
