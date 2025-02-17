@@ -12,9 +12,15 @@ const siteMetadata = {
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
   email: 'joeysywang.blog@gmail.com',
   github: 'https://github.com/JoeyWangTW',
+  githubHandle: 'JoeyWangTW',
   x: 'https://twitter.com/joeysywang',
-  youtube: 'TheJoeywang123',
+  xHandle: 'joeysywang',
+  youtube: 'https://www.youtube.com/@joeysywang',
+  youtubeHandle: 'joeysywang',
   linkedin: 'https://www.linkedin.com/in/szuyuwang/',
+  linkedinHandle: 'szuyuwang',
+  venmo: 'https://venmo.com/u/Joey_Wang',
+  venmoHandle: 'Joey_Wang',
   locale: 'en-US',
   // set to true if you want a navbar fixed to the top
   stickyNav: false,
@@ -22,10 +28,11 @@ const siteMetadata = {
     // If you want to use an analytics provider you have to add it to the
     // content security policy in the `next.config.js` file.
     // supports Plausible, Simple Analytics, Umami, Posthog or Google Analytics.
+
+    googleAnalyticsId: process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID, // e.g. UA-000000-2 or G-XXXXXXX
     umamiAnalytics: {
-      googleAnalyticsId: 'G-6WW0WYP0P8', // e.g. UA-000000-2 or G-XXXXXXX
       // We use an env variable for this site to avoid other users cloning our analytics ID
-      umamiWebsiteId: process.env.NEXT_UMAMI_ID, // e.g. 123e4567-e89b-12d3-a456-426614174000
+      // umamiWebsiteId: process.env.NEXT_UMAMI_ID, // e.g. 123e4567-e89b-12d3-a456-426614174000
       // You may also need to overwrite the script if you're storing data in the US - ex:
       // src: 'https://us.umami.is/script.js'
       // Remember to add 'us.umami.is' in `next.config.js` as a permitted domain for the CSP
