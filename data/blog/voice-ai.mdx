@@ -1,0 +1,317 @@
+---
+title: 'Notes from Pipecat’s "Voice AI & Voice Agents - An Illustrated Primer"'
+date: '2025-02-27'
+tags: ['AI', 'Voice AI']
+draft: false
+summary: 'My notes from reading the Pipecat team’s early access preview on Voice AI and Voice Agents, covering core technologies, best practices, and future developments in conversational AI.'
+images: []
+layout: PostLayout
+---
+
+<Image
+  alt="voice-ai"
+  src="/static/images/voice-ai/voice-ai.jpg"
+  width={500}
+  height={300}
+/>
+
+## Background
+
+I'm pretty interested in voice llm applications, 
+I've tried to build a simple talking bot connected to llm right before chat gpt released their voice mode 
+(not the advanced one with realtime-api, the classic one). 
+I've also attended OpenAI's real-time api and reasoning hackathon, 
+we built a working prototype, 
+but it's just a proof of concept and I find it hard to see the path to productize such audio AI agent.
+
+Luckily, when I attended the 2025 AI engineer summit the very next week, 
+I stumbled upon Daily.co's booth at the expo. 
+I've been using daily.co in my day job for a while. 
+And I noticed they are all in on AI audio agents more recently. 
+Their logo also appeared on Jensen Huang's CES keynote, 
+in the AI orchestration and management section. 
+I had a chance to chat with their CEO Kwindla, 
+I asked about their pipecat framework, 
+his take on speech-to-speech vs classic, 
+and some technical stuff like turn taking. 
+Later I figured they already have a primer about voice AI, 
+so I read it and took some notes.
+
+<div className="flex flex-row gap-4">
+  <Image
+    alt="voice-ai"
+    src="/static/images/voice-ai/daily.jpg"
+    width={300}
+    height={500}
+  />
+
+  <Image
+    alt="voice-ai"
+    src="/static/images/voice-ai/jensen-ces.png"
+    width={500}
+    height={300}
+  />
+</div>
+
+## My top takeaways
+- Things are moving fast, and phone applications are the fast growing use case
+- Latency is very important in voice agent, web RTC can handle a lot of things, but still need to always keep in mentioned
+- Function calling, async process can have some quirks, but it's critical to building agents
+- Some eval is better than no eval, and audio have different kind of ways
+- Will start exloring with pipecat to build some side project
+
+# Notes
+
+## Chapter 1,2 
+
+Conversational AI is happening and moving at a fast pace, the guide is written by the Pipecat team. Pipecat is a vendor-neutral agent layer, widely used by different teams and companies. So they are very familiar with all the details.
+
+## Chapter 3: Conversational AI 
+
+**Basic Conversational AI Loop**
+Voice capture -> STT -> LLM -> TTS -> Play audio
+
+## Chapter 4: Core Technology and Best Practices
+
+### 4.1 Latency
+- Very important, will be mentioned in many places, because human expect fast response with audio.
+- Manually measure latency between voice and voice is easy.
+- But hard to do programmatically, because of all the layers. time-to-first-(audio)-byte is used as a proxy and 800ms is a good target.
+
+### 4.2 LLM for Voice Use Case
+Starting with GPT-4, it seems possible because:
+- Low latency
+- LLM can follow instructions
+- Function calling
+- Low hallucination
+- Can have personality
+- Cost is reasonable
+
+And currently stoa model can do pretty well:
+- 4o (4o-mini is not faster)
+- Sonnet 3.5 (TTFT slower than others)
+- Gemini 2.0 (10x cheaper)
+
+Adding context, it’s not so easy to pin cost/min  
+Open models are potentially possible with recent developments
+
+**Speech-to-speech**
+- Lower latency
+- Understand nuances
+- Natural voice
+
+But:
+- Latency actually is higher since audio has more token
+- Understanding nuances doesn’t have real benefit now
+- Weird behavior in voice model
+- APIs are still work in progress
+
+### 4.3 Speech to Text
+- TTS Deepgram is a popular provider, overall pretty good, but out of us can have higher latency.
+- There are some other options, and google gemini can be cheaper.
+- Prompting can also help fix STT transcript error.
+
+### 4.4 TTS
+Choose based on:
+- How it sounds
+- Latency
+- Cost
+- Language support
+
+Multiple providers: Cartesia, Deepgram, ElevenLabs, Rime  
+Can still mispronounce, and new models are coming
+
+### 4.5 Audio Processing
+- Mic and automatic gain control, bluetooth can add latency, and some gain control you won’t be able to disable if you need to.
+- Echo cancelation, if not done well, bot can hear themselves. WebRTC and mobile have good support.
+- Noice cancelation exists, but playing music with it is not very good.
+- Echo Encoding Opus is the best.
+- Can do server side primary speaker isolation using krisp.
+- Voice activity detection.
+
+### 4.6 Network Transport
+
+**Websocket vs WebRTC**
+- WebRTC can solve a lot of problems Websocket is having.
+- Opus handle network better.
+- Time stamped.
+- Can have analytic from provider.
+- Reconnect is handled.
+- Echo, noise, gaincontrol.
+
+**HTTP**
+- Is also using TCP so have latency, can have both WebRTC and HTTP on client.
+
+**QUIC and MOQ**
+- New protocol for streaming media, seems promising.
+
+**Network routing**
+- Sending between different region can have longer latency, can do a first close hop to the same region server, then route through private route.
+
+### 4.7 Turn Detection
+
+**Voice activity detection**
+- Small model, not just volume (silero VAD)  
+
+Parameters to adjust:
+- Length of pause for count as end
+- Length of speech for count as start
+- Confidence for classify audio as speech
+- Min volume
+
+Can do push to talk, but UX is different, better when long pause happens a lot
+
+**Endpoint markers**
+- “Over” on walkie, but not so easy to make user do it
+
+**Context-aware detection**
+- Small turn detection model
+- Us llm to understand context
+
+### 4.8 Interruption Handling
+- The audio pipeline needs to be cancelable to let user interrupt
+
+Some unintended interruptions:
+- Noise
+- Echo from bot
+- Background speech
+
+Maintain context after interruption, so can pickup correctly once back
+
+### 4.9 Manage Conversation Context
+- LLM API providers are sill figuring it out too
+- Can modify context between turns
+
+### 4.10 Function Calling
+- Fetch data
+- Interact with server & API
+- Integration with phone (transfer, DTMF tones)
+- Scripts
+
+**Reliability** - better have eval for function calling
+
+Adding Latency because:
+- Function -> run function -> inference again with function result (run twice)
+- Function can’t stream
+- Some API have higher TTFT when tools are enabled
+- Functions can be slow
+
+**Handle interruption**
+- If llm calls a function, need to put request/response in context. If not when interrupted, can get error, or cause in-context-learning not to run funtions
+
+**Streaming & function call chunck**
+- Function needs to handle complete chunk, but maybe can isolate function call chuck with stream chuck
+
+**How and where to execute function**
+- In code, Can be directly
+- In code, Can be ambiguated
+- Call API from device
+- Call API on the cloud
+
+**Async function calling**, not supported now, need to have it return with a queue.
+
+**Parallel & composite functions**
+- Exciting but adding complexity & inconsistency
+
+### 4.11 Multimodality
+- STOA models are adding more and more Audio and video capabilities
+
+## Chapter 5: Using Multiple Models
+
+Fine-tuned model can:
+- Embedded knowledge
+- Have it’s own response pattern  
+
+Start with prompt engineering before fine-tune
+
+Async operations, can pass to reasoning models for complex task  
+Need to have a function return immediately, and have orchestration to queue and insert result once async is done
+
+Guardrails, can have different models to do guardrails  
+But model are a lot better than a year ago  
+Sanity check when touching backend
+
+**Inference actions**
+- More and more new code patterns, such as llm calling another llm as tool
+
+**Self-improving system**
+- Adjust based on user feedback during the call
+- VAD self config if interrupt use a lot
+- Self adjust response length if user keep interrupting
+- What eles?
+
+## Chapter 6: Scripting & Instruction Following
+
+It’s hard to pack everything in a prompt, especially when we are adding conversation context
+
+State machine approach, each state have:
+- System instruction & tools
+- Context
+- Ways to exit
+
+Can update & summarize when transition between states (Pipecat flow helps facilitate these)
+
+## Chapter 7: Voice AI Eval
+
+Different from unit test, need to have many input, can’t just do yes/no
+
+Failure modes, might not because of llm:
+- Latency
+- Transcript error
+- Names, emails, number got messed up
+- Interruption
+
+Run prompt when getting a new model, basic eval is better than no eval  
+(Coval - a startup focus on this)
+
+## Chapter 8: Telephone
+
+Most fast growing applications happens on telephone  
+It’s easy decision when llm per minute cost is lower than human
+
+Not just ROI:
+- Scale, handle high-volume peak
+- Can sometimes be better than human
+
+Voice agents are reshaping phone calls, maybe will be AI talking to AI soon?
+
+Some things for phones:
+- PSTN (twilio is a PSTN platform)
+- SIP
+- DTMF (keypress sound for telephone menu)
+
+Warm transfer, where the agent talk during transfer before getting to a human
+
+## Chapter 9: RAG and Memory
+
+Can go from basic lookup to complicated semi-structured fetch  
+Use 80/20 when you have a knowledge base
+
+**Memory**
+- Can save for cross session
+- Save & index message metadata graph
+
+## Chapter 10: Hosting and Scaling
+
+Voice agent needs to be:
+- Long running
+- Realtime can’t stall
+- Websocket or webRTC
+
+Serverless can not do it  
+Deploy with docker after prototype  
+Use kubernetes to scale
+
+Need to think about cold start problem
+
+And setting up start with rule of thumb: L single agent per VM CPU, double the ram on local machine
+
+Use python, gen AI is python-centric
+
+## Chapter 11: What’s Coming in 2025
+- Latency optimization
+- Development in multimodality models
+- Audio test & eval
+- Context caching
+- Voice agent platform providers
+- Speech-to-speech model
