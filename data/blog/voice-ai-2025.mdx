@@ -1,0 +1,120 @@
+---
+title: 2025 我們能看到 AI 語音大爆發嗎？ 
+date: '2025-02-27'
+tags: ['AI', 'Voice AI']
+draft: false
+summary: 在參加完 OpenAI 的 Realtime黑客松和AI Engineer Summit還讀了Pipecat的語音AI primer後，對語音AI有蠻多想法，記錄一下...
+images: []
+layout: PostLayout
+---
+
+## Context
+
+我一直有個很想解決的問題，就是跟客服講電話實在太痛苦了。所以我一直在看有沒有好的解法，也一直在關注語音相關的AI發展。
+
+這幾週參加了openai的realtime黑客松，一參加完黑客松，就寫了這篇[文章](https://joeywang.blog/blog/openai-hackathon)，講了語音AI的挑戰，文中指出我覺得還有點距離。
+
+但是過了一週，參加了ai engineer summit後，看了業界的現況，也讀了pipecat寫的Voice AI primer，有些想法可以更新一下。
+
+## Learning on the fly
+
+也不是要打臉自己，那篇文章裡提到的困境其實都是存在的
+
+1. Realtime vs STT+LLM+TTS
+2. 不懂讀空氣
+3. 太僵硬
+4. 太慢了
+
+回頭看，我在考慮一個「接近完美」的AI語音助理，所以要求很高。但是實際上，從2023 GPT-4 釋出到現在，已經有不少實際應用，也是一個急速發展的領域。
+
+
+## What are people “actually” doing?
+
+### 「Meet people where they are」
+
+AI Engineering summit 裡的一個SuperDial的talk，他們主要做的是醫療相關的語音助理，會幫忙打去各個provider問問題，搜集資料。
+這個就是一個很實際的應用，很多產業離不開電話，實際對話內容也很機械化，所以當讓LLM去做更省、更規模化，是個好應用。
+很多問題在這種使用情境下根本沒差，例如聲音是否自然，會不會重複問題，這些在對比提供的好處後，都可以被暫時忽略。
+ 
+SuperDial @ AI Engineer Summit talk (5:46:50)
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/D7BzTxVVMuw?si=tsOVmvxIGJW_"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+
+配合Voice AI書中提到的，高速成長的應用都是在電話上，業界應用的現況，就是「Meet people where they are」。
+
+<Image
+  alt="voice-ai"
+  src="/static/images/voice-ai/voice-ai.jpg"
+  width={500}
+  height={300}
+/>
+
+書裡也提到，會不會很快，我們就會讓AI跟AI講電話？人都不用講了，這確實是個有趣的想像。
+
+就在同一個週末另一個ElevanLabs hackathon，就有人做了兩個AI用特殊的語音對話
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/EtNagNezo8w?si=h9GOCBXoybx43gSc"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+不過這就讓人反思，到這個程度，兩邊都有AI助理了，真的還需要電話嗎？這些Legacy system到底會存留多久，我們需要花多少心力向下相容？或許這更多是個社會學、歷史的問題而不是科技的問題。
+
+我自己想的一個可能的發展，考量到audio很貴，GPU需要耗能，或許更有效的方法是每個網站都加上MCP（Model Context Protocal 這又是另一個話題，有機會再分享），AI助理們就不需要透過電話這種古老的legacy系統溝通了。但是下一個問題，網站有沒有可能很快也會變成 legacy 系統，真正未來的系統到底長怎樣？
+
+### Voice to Voice
+
+Realtime api真的是個很先進，但是又很奇怪的模型。跟OpenAI的人聊，他說了他們一開始有realtime API 也是很實驗性質，就連他們那個訂草莓到發表會場的demo也都花了幾個月才搞定。
+
+Voice to Voice 雖然乍看可以最低延遲、最自然，但是因為audio的token數，還有模型本身的不穩定，都還沒辦法取代stt-llm-tts的流程。
+
+我跟ElevenLabs的人在booth上聊了一下，他們從只做TTS到現在踏入Voice Agent，他們看到業界有其他Voice to voice 模型正在如火如荼進行中，他說可能年中就會有新的發展，我們可以拭目以待。
+
+### Core Technical Problems
+
+在Daily的攤位上，遇到了他們的CEO Kwindla，之前只在slack上處理我們公司的support ticket的時候遇到過，終於見到本人，聊了聊一些audio AI問題，發現他們早就整理成冊了。他們在做Pipecat這個開源的框架，有很多洞見，所以寫了”Voice AI & Voice Agents -  An Illustrated Primer”，我看完了也寫了些[筆記]()
+
+簡單來說，就是整個voice AI pipeline很複雜，LLM之外，整個流程從輸入的麥克風開始，到最後從喇叭放出來，有很多需要處理的技術細節。其中latency是最重要的限制、優化目標，只要慢了可能幾百ms，真人就可以明顯察覺，對話的流暢度、真實度就會下降。
+
+雖然說技術困難，但是因為商機浮現，各個部分都有人在做各自的優化，很多時候甚至能看到非線性的跳躍。
+
+其中一個例子是STT，Deepgram Nova2沒有多語言，很多語音助理的功能就有點受限，但是他們2025二月出的nova3就能多語言，打開了很多的可能性。
+
+或許很多個別問題會陸續一個一個被解決，每次有新的跳躍，做到一半的人就能大幅度超前，拋下那些因為有問題而一開始就退怯的人。
+
+SpeedDial的講者有提到，他相信這些技術問題會被解決，而真正的商業價值就在那些經過測試、有實際應用的conversation裡。
+
+## What should I do?
+
+我要去AI Engineer Summit的前一天，我們公司CEO問我「You won’t be here tomorrow right? You are going to ingest more AI？」雖然是個玩笑，但是確實這幾週收到了很多新資訊。
+
+不只是 Voic AI 整個 LLM, Gen AI 都在飛快的跑著，眼見證了很多人的投影片兩天就 out dated 了。
+
+我認為想要深入這個領域的人，需要做的是待在浪頭，隨時吸收新的資訊。
+甚至不只吸收，還要動手，一有新的東西，要能實作一點東西出來，跑跑example，用AI改一下開發有趣的應用。畢竟很多新的技術其實都還沒有找到最適合的應用。
+
+現在我排在計劃上要做的，探索最新的發展
+- 實作 pipecat
+- 實作 Agent + MCP
+
+另外也在公司把AI導入產品，比起測試最新的東西，產品化也有很多要學
+- 確認用戶問題、需求、對AI的想法，找到好的解法，好的溝通方法
+- AI 應用的UI/UX
+- 怎麼提升穩定度
+- 降低成本
+- 怎麼做Observability & Eval
+
+也期許多多整理吸收到的資訊，再好好輸出，幫自己重新理解一次
+Let’s get back to work…

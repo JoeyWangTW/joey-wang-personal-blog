@@ -1,5 +1,5 @@
 {
-  "ai": 3,
+  "ai": 5,
   "web-dev": 3,
   "projects": 4,
   "web3": 4,
@@ -9,5 +9,6 @@
   "life": 1,
   "hackathon": 1,
   "nft": 1,
-  "data": 1
+  "data": 1,
+  "voice-ai": 2
 }
