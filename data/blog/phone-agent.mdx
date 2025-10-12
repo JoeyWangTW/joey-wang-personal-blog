@@ -1,0 +1,109 @@
+---
+title: 我的 AI Phone Agent 讓 Macy's 客服懷疑人生
+date: '2025-10-12'
+tags: ['AI', 'Voice AI']
+draft: false
+summary: No code 結合 Claude Desktop 加上 ElevenLabs MCP，直接打到客服懷疑人生 
+images: []
+layout: PostLayout
+---
+兩年前，我試著用gpt-3.5，做了一個跟客服吵架的語音AI，只做出了一個概念。
+
+兩年後，我一行code都沒寫，用現有的工具，組出了一個語音AI助理，成功的幫我打了通客服電話。
+
+可以聽到客服從困惑，到發現是AI，講出一個懷疑人生的OoooKay~，最後無奈接受現實回答問題。
+
+這個”Agent”做到了以下
+1. 先看一下我Macy’s 的訂單email，搜集資訊
+2. 打電話給客服（轉接、等待到客服專員）
+3. 接通後，問了訂單的鍋子到底有沒有保固，還追問了幾個問題
+4. 最後回報給我，客服說「只有30天退貨期」
+
+整個過程就用到三個prompt
+
+- “Check my latest macy's order email”
+- “Call macy' customer support and ask if they have a warranty for this pot”
+- “what's the result”
+
+使用的材料有以下
+- Claude Desktop 
+- Gmail MCP
+- ElevenLabs MCP
+這個Agent最核心的部分就是兩個MCP Server，分別像是眼跟手，Gmail MCP 負責搜集資訊，ElevenLabs MCP負責做動作。
+Claude Desktop的角色就是腦(Sonnet 4.5) 跟身體 (MCP Client)，能把眼跟手安裝上，還能夠協調各個部位。
+
+當然中間還是有些小波折
+1. MCP設定還是很不User friendly，要是沒有背景知識可能很難串好，要設定GCP，還有Twillio
+2. 在打電話的時候，Agent一聽到西語就按了進去，結果西語客服接起來還是說英文，客服直接傻眼
+3. Agent太過輕鬆就接受了客服給的資訊，或許有更多可以談判的空間
+
+Demo 影片：
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/3u9yuskx6bk"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+></iframe>
+
+## Voice AI 的現況，只有2B，沒有2C
+
+回過頭來看Voice AI的發展，這一兩年已經有很大的進步，但是幾乎所有的都被用在了企業端，也就是那個接大家電話的客服，反而沒看到太多給使用者的電話助理產品
+
+我認為有幾個原因
+1. 個人的需求比起企業更多變
+
+相對於企業客服，可能有個標準的流程、固定的資訊，使用者的需求真的可以有很多不同，真的打通了之後，怎麼應對也有非常多可能性，是個有難度的題目。
+但我覺得隨著模型越來越強，搭配適當的context、prompt、tool，這個問題應該會慢慢被解決，畢竟LLM Agent的願景就是讓AI自己想怎麼解決複雜的狀況。
+
+2. 經手個人隱私資料很麻煩 
+
+LLM 都是沒有記憶的，所以怎麼提供足夠的資訊，就非常重要。這次我用gmail，剛好email裡就有所有的資訊，所以還算順利。
+但如果需要一個更全能的助理，勢必須要更了解我，要知道我的基本資訊，甚至有時候需要一些比較敏感的資訊，才能把事情處理好。
+ElevenLabs就可以設定轉接規則，例如「問到信用卡號碼就轉接給本人」，但這又違背的全能的助理的初衷了。
+現在市場上我沒看到合適的解法，讓使用者可以放心把重要個人資訊交給AI處理、使用，我認為這是Agent要能夠成功幫我們做事，必須得解決的問題。
+
+3. 個人的付款意願比起企業低
+
+對於企業客服，如果沒有AI他們就是要請人接電話，AI能節省很多的花費。但是對於一般使用者，花錢請人幫忙打電話，可能不是那麼常見。大家可能會打客服打到生氣，但也就久久一次。
+我這通3-4分鐘的電話就花了0.5美金左右，如果是那種等很久的客服，可能一通電話要好幾塊，使用者真的會想付這個錢嗎？我覺得這個值得好好調查
+如果真的要產品化2C，怎麼定價可能就是個大挑戰，訂閱制就會像是請一個便宜的助理，用量制就會像是買計次服務。
+也有可能因為AI，有新的使用方式出現，例如：打100通電話比價，這種事人時間成本太高，不太可能有人去做，但是如果是AI來做，成本跟省下來的錢或許就合理了。
+
+## 詳細 MCP Client & Server 設定 
+### Claude Desktop & MCP
+Anthropic 在24年底公佈了MCP，當初在 AI Engineer Summit 的時候，大家都很期待，MCP那場講座也爆滿。
+
+過了超過半年，MCP 本身還是很 Dev 導向，對一般使用者不是很友善，但是也有些以 Plugin 或是 App Integration 的形式呈現了。
+Claude Desktop 應該是最早的 MCP Client，比起 ChatGPT connector，Claude 有更多設定空間。
+
+### Gmail MCP
+Claude Desktop 其實有 Gmail Connector，但是我有些其他下一步的計劃，所以還是找了單純的MCP。
+我用了[這一個版本](https://github.com/GongRzhe/Gmail-MCP-Server)的 MCP，需要設定一下GCP，確定可以好好的驗證身份
+
+### ElevenLabs MCP
+[ElevenLabs MCP](https://github.com/elevenlabs/elevenlabs-mcp) 其實就是接上他們的 API，這次可以 Work 就是靠著他們的 Conversation AI。
+我有遇到一個小問題，就是他官方 MCP 的設定能用的Tool只有一個，但是如果要打客服，就需要轉接等等其他Tool，他們其中一個 Issue 有說到要解決但是不知道什麼時候。
+一開始都是等 Agent create 好之後手動設定，但是我後來受不了，還是自己 Fork 了一份，把 Tool 的設定加進去，自己在 local 跑。
+
+### Twillio 
+打電話需要一個電話號碼，Twillio 應該是最方便的選擇。
+我選了個特殊意義的號碼，中間三碼 404 ，末四碼 3762 是 "Attention is all you need" 的 Arvix 編號。
+
+## Next Step
+
+這次算是個有趣的嘗試，但是理想中的助理應該要能夠在沒有監督的情況下，獨立完成任務。
+要達成這個就需要升級的腦、眼跟手，腦的部分需要一個能夠管控任務的 Agent，眼的部分要能夠處理更多個人資料，甚至做到找額外資料。
+最後手的部分，電話雖然可以完成不少事，但是可能還需要能夠寄 email，甚至操作 Browser。
+
+我現在正在研究的解法，就是爆改 Gemini-Cli，把coding agent 改成 Personal Assistant。
+如果去讀他的code，就會發現主要的任務在 Prompts.ts 裡，而且可以自行替換，所以如果參照他 prompt，寫出一個助理的版本，理論上是可行的。
+況且 Gemini-Cli 已經內建串 MCP ，還有各種現有tool，個人context的部分甚至可以直接放文字檔在文件夾裡，讓Gemini直接讀。
+
+搭配上最近 Google 加上 Gemini extention，串接 MCP 應該會變得更簡單。
+
+做出來再把Repo 補上[預定地](https://github.com/JoeyWangTW/)
+
+當然做 prototyp 跟做 product 還是有很多不同，個人助理的市場到底多大，大家到底願意付多少錢，這些都是需要好好大家到底願意付多少錢，這些都是待解的問題。
