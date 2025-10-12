@@ -1,14 +1,15 @@
 {
-  "ai": 5,
+  "ai": 6,
+  "voice-ai": 3,
+  "attention-economy": 1,
+  "hackathon": 1,
+  "study-abroad": 6,
   "web-dev": 3,
   "projects": 4,
-  "web3": 4,
-  "study-abroad": 6,
+  "life": 1,
   "startup": 4,
   "career": 4,
-  "life": 1,
-  "hackathon": 1,
+  "web3": 4,
   "nft": 1,
-  "data": 1,
-  "voice-ai": 2
+  "data": 1
 }
