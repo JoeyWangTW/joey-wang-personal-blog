@@ -7,6 +7,12 @@ interface Project {
 
 const projectsData: Project[] = [
   {
+    title: 'todo-cli',
+    description: `A terminal-based task manager where AI agents finish your todos for you. Powered by Gemini CLI and MCP tools - the todo app that actually gets things done.`,
+    imgSrc: '/static/images/todo-cli.png',
+    href: 'https://github.com/joeywangTW/todo-cli',
+  },
+  {
     title: 'YouTube Addiction Rehab',
     description: `A chrome extension using LLM to help user moderate content and recover from YouTube addiction. `,
     imgSrc: '/static/images/yt_addiction.jpg',
