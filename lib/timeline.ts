@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
+import remarkBreaks from 'remark-breaks'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 
@@ -83,7 +84,13 @@ export async function deleteNote(id: number): Promise<boolean> {
   return rows.length > 0
 }
 
-const markdown = unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeStringify)
+// remark-breaks keeps single line breaks as typed, like a social post rather than strict Markdown
+const markdown = unified()
+  .use(remarkParse)
+  .use(remarkGfm)
+  .use(remarkBreaks)
+  .use(remarkRehype)
+  .use(rehypeStringify)
 
 // Raw HTML in a note is dropped (remark-rehype default), so output is safe to inject
 export function renderMarkdown(content: string): string {
