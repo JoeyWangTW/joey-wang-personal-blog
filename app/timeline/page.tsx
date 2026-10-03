@@ -1,19 +1,20 @@
-import { allNotes } from 'contentlayer/generated'
 import { genPageMetadata } from 'app/seo'
 import TimelineList from '@/components/TimelineList'
+import { getNotes, renderMarkdown } from '@/lib/timeline'
 
 export const metadata = genPageMetadata({
   title: 'Timeline',
   description: 'Small pieces of thoughts, in order',
 })
 
-const isProduction = process.env.NODE_ENV === 'production'
-
-export default function TimelinePage() {
-  const notes = allNotes
-    .filter((note) => !(isProduction && note.draft))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .map(({ slug, date, tags, body }) => ({ slug, date, tags: tags ?? [], html: body.html }))
+// Rendered statically; /api/timeline revalidates this page whenever a note is added or removed
+export default async function TimelinePage() {
+  const notes = (await getNotes()).map((note) => ({
+    slug: `note-${note.id}`,
+    date: note.createdAt,
+    tags: note.tags,
+    html: renderMarkdown(note.content),
+  }))
 
   return (
     <div className="divide-y divide-gray-200 dark:divide-gray-700">

@@ -128,23 +128,6 @@ export const Blog = defineDocumentType(() => ({
   },
 }))
 
-export const Note = defineDocumentType(() => ({
-  name: 'Note',
-  filePathPattern: 'timeline/**/*.md',
-  contentType: 'markdown',
-  fields: {
-    date: { type: 'date', required: true },
-    tags: { type: 'list', of: { type: 'string' }, default: [] },
-    draft: { type: 'boolean' },
-  },
-  computedFields: {
-    slug: {
-      type: 'string',
-      resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
-    },
-  },
-}))
-
 export const Authors = defineDocumentType(() => ({
   name: 'Authors',
   filePathPattern: 'authors/**/*.mdx',
@@ -166,10 +149,7 @@ export const Authors = defineDocumentType(() => ({
 
 export default makeSource({
   contentDirPath: 'data',
-  documentTypes: [Blog, Note, Authors],
-  markdown: {
-    remarkPlugins: [remarkGfm],
-  },
+  documentTypes: [Blog, Authors],
   mdx: {
     cwd: process.cwd(),
     remarkPlugins: [

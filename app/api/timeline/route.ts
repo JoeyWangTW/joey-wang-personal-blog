@@ -1,10 +1,8 @@
 import { createHash, timingSafeEqual } from 'crypto'
+import { revalidatePath } from 'next/cache'
+import { createNote, deleteNote } from '@/lib/timeline'
 
-// Posting a note commits a markdown file to the repo; the push triggers a redeploy.
-// Required env: TIMELINE_ADMIN_PASSWORD, GITHUB_TOKEN (contents: write on this repo).
-// Optional env: GITHUB_REPO (owner/name), GITHUB_BRANCH.
-const REPO = process.env.GITHUB_REPO || 'JoeyWangTW/joey-wang-personal-blog'
-const BRANCH = process.env.GITHUB_BRANCH || 'main'
+// Required env: TIMELINE_ADMIN_PASSWORD, DATABASE_URL (set by the Vercel Neon integration)
 const MAX_CONTENT_LENGTH = 10000
 const MAX_TAGS = 10
 
@@ -16,19 +14,22 @@ function isAuthorized(request: Request) {
   return timingSafeEqual(hash(provided), hash(expected))
 }
 
-function fileNameFor(date: Date) {
-  // 2026-10-02T15:04:05.123Z -> 2026-10-02-150405
-  const [day, time] = date.toISOString().split('T')
-  return `${day}-${time.slice(0, 8).replace(/:/g, '')}`
+function unauthorized() {
+  return Response.json({ error: 'Unauthorized' }, { status: 401 })
+}
+
+function revalidateTimeline() {
+  revalidatePath('/timeline')
+  revalidatePath('/timeline/new')
+}
+
+function serverError(error: unknown) {
+  console.error('Timeline database error', error)
+  return Response.json({ error: 'Database error, check the server logs' }, { status: 500 })
 }
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (!process.env.GITHUB_TOKEN) {
-    return Response.json({ error: 'GITHUB_TOKEN is not configured' }, { status: 500 })
-  }
+  if (!isAuthorized(request)) return unauthorized()
 
   const body = await request.json().catch(() => null)
   const content = typeof body?.content === 'string' ? body.content.trim() : ''
@@ -44,40 +45,31 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Content is too long' }, { status: 400 })
   }
 
-  const now = new Date()
-  const slug = fileNameFor(now)
-  const path = `data/timeline/${slug}.md`
-  // JSON strings are valid YAML, so this keeps arbitrary tag text safe in front matter
-  const file = [
-    '---',
-    `date: ${JSON.stringify(now.toISOString())}`,
-    `tags: ${JSON.stringify(tags)}`,
-    '---',
-    '',
-    content,
-    '',
-  ].join('\n')
+  try {
+    const note = await createNote(content, tags)
+    revalidateTimeline()
+    return Response.json({ note })
+  } catch (error) {
+    return serverError(error)
+  }
+}
 
-  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    body: JSON.stringify({
-      message: `timeline: add note ${slug}`,
-      content: Buffer.from(file, 'utf8').toString('base64'),
-      branch: BRANCH,
-    }),
-  })
+export async function DELETE(request: Request) {
+  if (!isAuthorized(request)) return unauthorized()
 
-  if (!res.ok) {
-    const detail = await res.text()
-    console.error('GitHub commit failed', res.status, detail)
-    return Response.json({ error: `GitHub API returned ${res.status}` }, { status: 502 })
+  const body = await request.json().catch(() => null)
+  const id = Number(body?.id)
+  if (!Number.isInteger(id)) {
+    return Response.json({ error: 'Invalid id' }, { status: 400 })
   }
 
-  const result = await res.json()
-  return Response.json({ slug, commitUrl: result.commit?.html_url })
+  try {
+    if (!(await deleteNote(id))) {
+      return Response.json({ error: 'Note not found' }, { status: 404 })
+    }
+    revalidateTimeline()
+    return Response.json({ ok: true })
+  } catch (error) {
+    return serverError(error)
+  }
 }
